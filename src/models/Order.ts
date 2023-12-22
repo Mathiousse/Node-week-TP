@@ -1,4 +1,6 @@
-class Order {
+import { Product } from "./Product";
+
+export class Order {
     id: number;
     userId: number;
     products: Product[];
