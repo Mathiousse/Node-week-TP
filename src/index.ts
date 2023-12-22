@@ -34,7 +34,7 @@ app.use(signin)
 
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running!`);
 });
 
 app.use((err: any, req: Request, res: Response, next: Function) => {

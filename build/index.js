@@ -32,7 +32,7 @@ app.use(products_1.default);
 app.use(orders_1.default);
 app.use(signIn_1.default);
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running!`);
 });
 app.use((err, req, res, next) => {
     console.error(err.stack);
