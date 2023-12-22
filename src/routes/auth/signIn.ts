@@ -20,8 +20,8 @@ type User = {
     role: string;
 };
 
-async function validateUser(username: string, password: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({ where: { username } });
+async function validateUser(email: string, password: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
         return null;
     }

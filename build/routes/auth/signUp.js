@@ -15,13 +15,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const express_1 = __importDefault(require("express"));
 const database_1 = __importDefault(require("../../database"));
+const express_validator_1 = require("express-validator");
 const router = express_1.default.Router();
-router.post('/auth/signup', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/auth/signup', [
+    (0, express_validator_1.check)('username').isLength({ min: 5 }).withMessage('must be at least 5 chars long'),
+    (0, express_validator_1.check)('email').isEmail().withMessage('must be an email')
+], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const errors = (0, express_validator_1.validationResult)(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     const { username, password, email } = req.body;
     let { role } = req.body;
     const existingUser = yield database_1.default.user.findUnique({ where: { username } });
     if (existingUser) {
-        return res.status(400).json({ message: 'Username already exists' });
+        return res.status(400).json({ message: 'User already exists' });
     }
     const hashedPassword = yield bcrypt_1.default.hash(password, 10);
     if (!role) {
@@ -35,6 +43,6 @@ router.post('/auth/signup', (req, res) => __awaiter(void 0, void 0, void 0, func
             email,
         },
     });
-    res.status(200).json({ message: 'User created successfully', user });
+    res.status(200).json({ message: 'User created successfully!', user });
 }));
 exports.default = router;

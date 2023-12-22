@@ -17,9 +17,9 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const express_1 = __importDefault(require("express"));
 const database_1 = __importDefault(require("../../database"));
 const router = express_1.default.Router();
-function validateUser(username, password) {
+function validateUser(email, password) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = yield database_1.default.user.findUnique({ where: { username } });
+        const user = yield database_1.default.user.findUnique({ where: { email } });
         if (!user) {
             return null;
         }
