@@ -1,6 +1,8 @@
 import express from "express";
 import prisma from "../database";
-import { Order } from "../models/Order";
+import { check, validationResult } from 'express-validator';
+import { Request, Response } from 'express';
+import { authorize } from "./auth/signIn";
 
 const router = express.Router();
 
@@ -9,20 +11,26 @@ router.get("/orders", async (req, res) => {
     res.status(200).json(orders);
 });
 
-router.post("/orders", async (req, res) => {
+router.post("/orders", authorize(['MANAGER', 'ADMIN']), [check('products').isArray().withMessage('Products must be an array')], async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     const order = req.body as { userId: number, products: { productId: number, quantity: number }[] };
     if (!order.userId || !order.products) {
         res.status(400).json({ error: "Order data is missing from request" });
         return;
     }
-    // Check if the User exists
     const user = await prisma.user.findUnique({ where: { id: order.userId } });
     if (!user) {
         res.status(400).json({ error: "User with id " + order.userId + " does not exist" });
         return;
     }
-    // Check if all Products exist
     for (const product of order.products) {
+        if (isNaN(product.productId)) {
+            res.status(400).json({ error: "Product ID must be a number" });
+            return;
+        }
         const productExists = await prisma.product.findUnique({ where: { id: product.productId } });
         if (!productExists) {
             res.status(400).json({ error: "Product with id " + product.productId + " does not exist" });
@@ -50,8 +58,11 @@ router.post("/orders", async (req, res) => {
     }
 });
 
-
-router.patch("/orders/:id", async (req, res) => {
+router.patch("/orders/:id", authorize(['MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     const id = parseInt(req.params.id);
     const orderUpdate = req.body as { userId: number, products: { productId: number, quantity: number }[] };
     const order = await prisma.order.findUnique({ where: { id } });
@@ -106,7 +117,11 @@ router.patch("/orders/:id", async (req, res) => {
 });
 
 
-router.delete("/orders/:id", async (req, res) => {
+router.delete("/orders/:id", authorize(['MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     const id = parseInt(req.params.id);
     if (!id) {
         res.status(400).json({ error: "Order ID is incorrect or missing" });
