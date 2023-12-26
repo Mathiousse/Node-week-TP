@@ -53,19 +53,31 @@ router.post("/users", async (req, res) => {
 
 
 router.patch("/users/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
-    const userUpdate = req.body;
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) {
-        res.status(404).json({ error: "User with an id of " + id + " could not be found" });
-        return;
+    let user;
+    try {
+        const id = parseInt(req.params.id);
+        if (id !== id) {
+            res.status(400).json({ error: "User ID is incorrect or missing" });
+            return;
+        }
+
+        const userUpdate = req.body;
+        try {
+            user = await prisma.user.findUnique({ where: { id } });
+        } catch (error) {
+            res.status(404).json({ error: "User with an id of " + id + " could not be found" });
+            return;
+        }
+        if (!userUpdate.username && !userUpdate.email) {
+            res.status(400).json({ error: "User data is missing from request" });
+            return;
+        }
+        const updatedUser = await prisma.user.update({ where: { id }, data: userUpdate });
+        res.json(updatedUser);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Something went wrong" });
     }
-    if (!userUpdate.username && !userUpdate.email) {
-        res.status(400).json({ error: "User data is missing from request" });
-        return;
-    }
-    const updatedUser = await prisma.user.update({ where: { id }, data: userUpdate });
-    res.json(updatedUser);
 });
 
 router.delete("/users/:id", async (req, res) => {
